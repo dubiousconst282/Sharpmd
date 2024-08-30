@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Compiler",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Sharpmd.Compiler/bin/Debug/Sharpmd.Compiler.dll",
+            "args": [ "Samples/Simple/bin/Debug/Simple.dll", "logs/compile_out.dll" ],
+            "cwd": "${workspaceFolder}/",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Launch Sample",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Samples/Mandelbrot/bin/Debug/Mandelbrot.dll",
+            "args": [ ],
+            "cwd": "${workspaceFolder}/logs",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}

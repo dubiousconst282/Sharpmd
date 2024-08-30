@@ -1,0 +1,14 @@
+static Self::BinaryOp_Int_1(#x: int, #y: int) -> int {
+BB_01:
+    r1 = add #x, #y -> int
+    r2 = icmp.ult r1, 100 -> bool
+    r3 = select r2 ? r1 : 100 -> int
+    ret r3
+
+// CHECK: BinaryOp_Int_1
+// CHECK: SIMD::Add
+// CHECK: SIMD::Cmp_Ult
+// CHECK: select
+// CHECK-SAME: int[x4]
+// CHECK: ret
+}
