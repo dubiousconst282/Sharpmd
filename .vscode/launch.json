@@ -2,6 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Test Runner",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/tests/Sharpmd.CompilerTests/bin/Debug/Sharpmd.CompilerTests.dll",
+            "args": [
+                // "run", "Extrinsifier/SN_Vectors.distil", "--method", "CtorInline", "--dump-all"
+            ],
+            "cwd": "${workspaceFolder}/",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": "Launch Compiler",
             "type": "coreclr",
             "request": "launch",

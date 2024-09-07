@@ -4,6 +4,7 @@ using DistIL.Analysis;
 using DistIL.AsmIO;
 using DistIL.IR;
 using DistIL.IR.Utils;
+using DistIL.Util;
 
 public class UniformValueAnalysis : IMethodAnalysis, IPrintDecorator {
     readonly MethodBody _method;
@@ -22,22 +23,35 @@ public class UniformValueAnalysis : IMethodAnalysis, IPrintDecorator {
     static IMethodAnalysis IMethodAnalysis.Create(IMethodAnalysisManager mgr)
         => new UniformValueAnalysis(mgr.Method, mgr.Compilation.GetAnalysis<GlobalFunctionEffects>());
 
-    public bool IsUniform(Value val) => GetInfo(val).Kind == ValueUniformityKind.Uniform;
-
     public ValueUniformityInfo GetInfo(Value val) {
         if (val is Const or Undef) {
             return ValueUniformityKind.Uniform;
         }
-        if (!_cache.TryGetValue(val, out var info)) {
+        ref var info = ref _cache.GetOrAddRef(val, out bool exists);
+        
+        if (!exists) {
+            info = ValueUniformityKind.Unknown; // temp init to prevent infinite loop when checking phis
+
             if (val is Instruction inst) {
-                info = ComputeInfo(inst);
+                info = ComputeUniformity(inst);
             } else if (val is Argument arg) {
                 info = IsUniform(_method.Definition, arg.Param) ? ValueUniformityKind.Uniform : ValueUniformityKind.Varying;
             }
-            _cache[val] = info;
         }
         return info;
     }
+    public bool IsDivergent(BasicBlock block)
+    {
+        foreach (var pred in block.Preds) {
+            // TODO: handle unconditional branches
+            if (!(pred.Last is BranchInst { IsConditional: true } br && IsUniform(br.Cond))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public bool IsUniform(Value val) => GetInfo(val).Kind == ValueUniformityKind.Uniform;
 
     public static bool IsUniform(MethodDef method, ParamDef par) {
         if (method.IsInstance && par == method.Params[0]) {
@@ -47,7 +61,7 @@ public class UniformValueAnalysis : IMethodAnalysis, IPrintDecorator {
         return uniformAttr != null;
     }
 
-    private ValueUniformityKind ComputeInfo(Instruction inst) {
+    private ValueUniformityKind ComputeUniformity(Instruction inst) {
         if (inst is CallInst call) {
             var funcEffects = _funcInfo.GetEffects(call.Method);
             return funcEffects.MayOnlyThrowOrReadMem ? CheckAllValuesUniform(call.Args) : ValueUniformityKind.Varying;
@@ -61,11 +75,25 @@ public class UniformValueAnalysis : IMethodAnalysis, IPrintDecorator {
         else if (inst is FieldAddrInst flda && (flda.IsStatic || IsUniform(flda.Obj))) {
             return ValueUniformityKind.Uniform;
         }
+        else if (inst is PhiInst phi) {
+            // Any predecessor branches on a varying condition?
+            if (IsDivergent(phi.Block)) {
+                return ValueUniformityKind.Varying;
+            }
+            // Any incomming values are varying?
+            foreach (var (pred, value) in phi) {
+                if (!IsUniform(value)) {
+                    return ValueUniformityKind.Varying;
+                }
+            }
+            return ValueUniformityKind.Uniform;
+        }
         else if (!inst.HasSideEffects || inst is LoadInst) {
             return CheckAllValuesUniform(inst.Operands);
         }
-
-        return ValueUniformityKind.Varying;
+        else {
+            return ValueUniformityKind.Varying;
+        }
     }
 
     private ValueUniformityKind CheckAllValuesUniform(ReadOnlySpan<Value> values) {

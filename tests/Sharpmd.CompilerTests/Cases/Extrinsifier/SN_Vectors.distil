@@ -1,0 +1,89 @@
+import System.Numerics from System.Private.CoreLib
+
+static Self::Use(#x: Vector4) -> void {
+BB_01:
+  ret
+}
+
+static Self::ArithOps(#a: Vector4, #b: Vector4) -> void {
+BB_01:
+  v_add1 = call Vector4::op_Addition(Vector4: #a, Vector4: #b) -> Vector4
+  call Self::Use(Vector4: v_add1)
+  
+  v_sub1 = call Vector4::op_Subtraction(Vector4: #a, Vector4: #b) -> Vector4
+  call Self::Use(Vector4: v_sub1)
+  
+  v_mul1 = call Vector4::op_Multiply(Vector4: #a, Vector4: #b) -> Vector4
+  call Self::Use(Vector4: v_mul1)
+  
+  v_mul2 = call Vector4::op_Multiply(Vector4: #a, float: 0.5f) -> Vector4
+  call Self::Use(Vector4: v_mul2)
+  
+  v_div1 = call Vector4::op_Division(Vector4: #a, Vector4: #b) -> Vector4
+  call Self::Use(Vector4: v_div1)
+  ret
+// CHECK: ArithOps
+// CHECK: fadd
+// CHECK: fsub
+// CHECK: fmul
+// CHECK: fdiv
+// CHECK: ret
+}
+
+static Self::CtorInline1() -> Vector4 {
+BB_01:
+  r2 = newobj Vector4::.ctor(float: 1.0f, float: 2.0f, float: 3.0f, float: 4.0f) -> Vector4
+  ret r2
+// CHECK: CtorInline1
+// CHECK: setfld Vector4::X
+// CHECK-SAME: 1.0f
+// CHECK: setfld Vector4::Y
+// CHECK-SAME: 2.0f
+// CHECK: setfld Vector4::Z
+// CHECK-SAME: 3.0f
+// CHECK: setfld Vector4::W
+// CHECK-SAME: 4.0f
+// CHECK: ret
+}
+
+static Self::CtorInline2() -> Vector4 {
+BB_01:
+  r2 = newobj Vector2::.ctor(float: 1.0f, float: 2.0f) -> Vector2
+  r3 = newobj Vector4::.ctor(Vector2: r2, float: 3.0f, float: 4.0f) -> Vector4
+  ret r3
+// CHECK: CtorInline2
+// CHECK: getfld Vector2::X
+// CHECK: setfld Vector4::X
+// CHECK: getfld Vector2::Y
+// CHECK: setfld Vector4::Y
+// CHECK: setfld Vector4::Z
+// CHECK-SAME: 3.0f
+// CHECK: setfld Vector4::W
+// CHECK-SAME: 4.0f
+// CHECK: ret
+}
+
+
+static Self::StaticRedir(#a: Vector3, #b: Vector3) -> Vector3 {
+BB_01:
+  res = call Vector3::Dot(Vector3: #a, Vector3: #b) -> float
+  ret res
+// CHECK: StaticRedir
+// CHECK: call SN_Vector3::Dot
+// CHECK: ret
+}
+
+static Self::InstanceRedir(#a: Vector3) -> float {
+$Locals:
+  tmp: Vector3
+BB_01:
+  store $tmp, #a
+  r1 = call Vector3::get_Item(this: $tmp, int: 0) -> float
+  r2 = call Vector3::Length(this: $tmp) -> float
+  r3 = mul r1, r2 -> float
+  ret r3
+// CHECK: InstanceRedir
+// CHECK: call SN_Vector3::get_Item
+// CHECK: call SN_Vector3::Length
+// CHECK: ret
+}

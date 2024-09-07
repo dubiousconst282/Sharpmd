@@ -1,0 +1,48 @@
+import System.Numerics from System.Private.CoreLib
+
+static Self::Simple() -> float {
+BB_01:
+  r1 = setfld Vector4::X, undef(Vector4), 1.0f -> Vector4
+  r2 = setfld Vector4::Y, r1, 2.0f -> Vector4
+  r3 = setfld Vector4::Z, r2, 3.0f -> Vector4
+  r4 = setfld Vector4::W, r3, 4.0f -> Vector4
+  
+  x = getfld Vector4::X, r4 -> float
+  y = getfld Vector4::Y, r4 -> float
+  z = getfld Vector4::Z, r4 -> float
+  w = getfld Vector4::W, r4 -> float
+  
+  xy = fadd x, y -> float
+  zw = fadd z, w -> float
+  sum = fadd xy, zw -> float
+  
+  ret sum
+// CHECK: Simple
+// CHECK-NOT: setfld
+// CHECK-NOT: getfld
+// CHECK: ret
+}
+
+
+static Self::MidChainUse() -> float {
+BB_01:
+  r1 = setfld Vector4::X, undef(Vector4), 1.0f -> Vector4
+  r2 = setfld Vector4::Y, r1, 2.0f -> Vector4
+  r3 = setfld Vector4::Z, r2, 3.0f -> Vector4
+  r4 = setfld Vector4::W, r3, 4.0f -> Vector4
+  
+  x = getfld Vector4::X, r1 -> float
+  y = getfld Vector4::Y, r2 -> float
+  z = getfld Vector4::Z, r3 -> float
+  w = getfld Vector4::W, r4 -> float
+  
+  xy = fadd x, y -> float
+  zw = fadd z, w -> float
+  sum = fadd xy, zw -> float
+  
+  ret sum
+// CHECK: MidChainUse
+// CHECK-NOT: setfld
+// CHECK-NOT: getfld
+// CHECK: ret
+}

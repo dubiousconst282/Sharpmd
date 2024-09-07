@@ -13,7 +13,7 @@ using DistIL.Util;
 
 using MethodAttrs = System.Reflection.MethodAttributes;
 
-internal class VectorWideningPass {
+public class VectorWideningPass {
     internal Compilation _comp;
     internal TypeDef _containerType;
     internal int _targetWidth;
@@ -191,7 +191,7 @@ class VectorizingIRCloner : IRCloner {
         var op = ConvertOp.BitCast;
         
         if (srcType.IsFloat() && dstType.IsFloat()) {
-            op = srcType.BitSize() > dstType.BitSize() ? ConvertOp.FExt : ConvertOp.FTrunc;
+            op = dstType.BitSize() > srcType.BitSize() ? ConvertOp.FExt : ConvertOp.FTrunc;
         }
         else if ((srcType.IsFloat() && dstType.IsInt()) || (srcType.IsInt() && dstType.IsFloat())) {
             op = srcType.IsFloat() ? ConvertOp.F2I : ConvertOp.I2F;
@@ -219,7 +219,7 @@ class VectorizingIRCloner : IRCloner {
         if (value is VectorIntrinsic.OffsetUniformPtr lea) {
             return _builder.CreatePtrOffset(lea.Args[0], EmitGetLane(lea.Args[1], laneIdx), lea.ElemType);
         }
-        return _builder.Emit(new VectorIntrinsic.GetLane(value, ConstInt.CreateI(laneIdx)));
+        return _builder.Emit(new VectorIntrinsic.GetLane(value, laneIdx));
     }
 
     private Value EmitMoveMask(Value vector) {

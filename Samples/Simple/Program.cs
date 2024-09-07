@@ -12,8 +12,8 @@ SpmdRunner.DispatchRange(buffer.Length, (i) => {
 
     if (v < 3.0f)
         v = v * v;
-   // else
-   //     v = MathF.Sqrt(v);
+    else
+        v = MathF.Sqrt(v);
 
     buffer[i] = v;
 });

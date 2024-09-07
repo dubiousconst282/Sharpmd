@@ -19,6 +19,8 @@ var pm = new PassManager() {
 
 pm.AddPasses()
     .Apply<SimplifyCFG>()
+    .Apply<ExtrinsifierPass>()
+    .Apply<AggressiveSROA>()
     .Apply<SsaPromotion>()
     .Apply<ExpandLinq>()
     .Apply<SimplifyInsts>(); // lambdas and devirtualization
@@ -52,7 +54,10 @@ var candidateMethods = PassManager.GetCandidateMethodsFromIL(module, filter: (ca
 pm.Run(candidateMethods);
 
 var meth = candidateMethods.First(m => m.Name == "<<Main>$>b__0").Body;
-//new VectorLoweringPass().Run(meth);
+
+IRPrinter.ExportDot(meth, "logs/dump.dot", [new UniformValueAnalysis(meth, pm.Compilation.GetAnalysis<GlobalFunctionEffects>())]);
+
+new PredicationPass().Run(new MethodTransformContext(pm.Compilation, meth));
 
 IRPrinter.ExportDot(meth, "logs/dump.dot", [new UniformValueAnalysis(meth, pm.Compilation.GetAnalysis<GlobalFunctionEffects>())]);
 

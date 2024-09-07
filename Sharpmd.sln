@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C8C32B07
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpmd.CompilerTests", "tests\Sharpmd.CompilerTests\Sharpmd.CompilerTests.csproj", "{CCFCF7A7-9BDE-43AA-8F50-09068958E1F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RayTracer", "Samples\RayTracer\RayTracer.csproj", "{2CCBDFF9-41B6-415D-9A88-A4B814634A69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{CCFCF7A7-9BDE-43AA-8F50-09068958E1F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCFCF7A7-9BDE-43AA-8F50-09068958E1F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCFCF7A7-9BDE-43AA-8F50-09068958E1F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CCBDFF9-41B6-415D-9A88-A4B814634A69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CCBDFF9-41B6-415D-9A88-A4B814634A69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CCBDFF9-41B6-415D-9A88-A4B814634A69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CCBDFF9-41B6-415D-9A88-A4B814634A69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +54,7 @@ Global
 		{1FA2C2BF-E513-487B-8933-A98B95E6A51C} = {14E97DC7-E705-45D0-9768-1CB795174F15}
 		{BAE28D7B-E143-4E99-ACC8-09ABBAAE9C2D} = {446266C1-6873-4EE5-931C-85245C47ECD6}
 		{CCFCF7A7-9BDE-43AA-8F50-09068958E1F1} = {C8C32B07-7B20-45B3-BB8A-4A3829338835}
+		{2CCBDFF9-41B6-415D-9A88-A4B814634A69} = {446266C1-6873-4EE5-931C-85245C47ECD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {898630FD-D606-42BF-ACBA-89C1D748528F}

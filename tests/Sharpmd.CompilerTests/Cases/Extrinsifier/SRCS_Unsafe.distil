@@ -1,0 +1,43 @@
+import System.Runtime.CompilerServices from System.Private.CoreLib
+
+static Self::ReadWrite(#arr: byte[], #offset: int) -> void {
+BB_01:
+  r3 = arraddr #arr, #offset -> byte&
+  r5 = call Unsafe::ReadUnaligned<long>(byte&: r3) -> !!0
+  r6 = add r5, 1234L -> long
+  call Unsafe::WriteUnaligned<long>(byte&: r3, !!0: r6)
+  ret
+// CHECK: ReadWrite
+// CHECK: load.un
+// CHECK: store.un
+// CHECK: ret
+}
+
+static Self::PtrArith(#ptr: int&, #ptr_offs: int&) -> int {
+BB_01:
+  add_e = call Unsafe::Add<int>(!!0&: #ptr, int: 4) -> !!0&
+  add_b = call Unsafe::AddByteOffset<int>(!!0&: #ptr, nint: 4) -> !!0&
+  c_lt = call Unsafe::IsAddressLessThan<int>(!!0&: #ptr, !!0&: #ptr_offs) -> bool
+  c_gt = call Unsafe::IsAddressGreaterThan<int>(!!0&: #ptr, !!0&: #ptr_offs) -> bool
+  c_eq = call Unsafe::AreSame<int>(!!0&: #ptr, !!0&: #ptr_offs) -> bool
+  ret
+// CHECK: PtrArith
+// CHECK: lea #ptr + 4 * 4
+// CHECK: lea #ptr + 4 * 1
+// CHECK: icmp.ult
+// CHECK: icmp.ugt
+// CHECK: cmp.eq
+// CHECK: ret
+}
+
+static Self::MiscCilIntrinsics(#obj: object) -> int {
+BB_01:
+  sz = call Unsafe::SizeOf<int>() -> int
+  ptr = call Unsafe::Unbox<int>(object: #obj) -> !!0&
+  store.un ptr, sz
+  ret
+// CHECK: MiscCilIntrinsics
+// CHECK: intrinsic CIL::SizeOf
+// CHECK: intrinsic CIL::UnboxRef
+// CHECK: ret
+}

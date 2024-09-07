@@ -60,7 +60,9 @@ public class VectorIntrinsic : IntrinsicInst {
 
     }
 
-    public class GetLane(Value vector, Value laneIdx) : VectorIntrinsic(((VectorType)vector.ResultType).ElemType, [vector, laneIdx]);
+    public class GetLane(Value vector, int laneIdx) : VectorIntrinsic(((VectorType)vector.ResultType).ElemType, [vector, ConstInt.CreateI(laneIdx)]) {
+        public int LaneIdx => (int)((ConstInt)Args[1]).Value;
+    }
     public class GetMask(Value vector) : VectorIntrinsic(PrimType.UInt64, [vector]) { }
 }
 

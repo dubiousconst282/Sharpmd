@@ -13,8 +13,9 @@ using DistIL.Util;
 
 using TypeAttrs = System.Reflection.TypeAttributes;
 using FieldAttrs = System.Reflection.FieldAttributes;
- 
-internal class VectorLoweringPass {
+using DistIL.Passes;
+
+public class VectorLoweringPass : IMethodPass {
     readonly Compilation _comp;
 
     readonly Dictionary<VectorType, VectorPack> _vectorPackCache = new();
@@ -28,6 +29,12 @@ internal class VectorLoweringPass {
         _comp = comp;
 
         t_SimdOps = (TypeDef)comp.Resolver.Import(typeof(SimdOps));
+    }
+    
+
+    public MethodPassResult Run(MethodTransformContext ctx) {
+        Process(ctx.Method);
+        return MethodInvalidations.Everything;
     }
 
     public void Process(MethodBody method)
@@ -44,9 +51,21 @@ internal class VectorLoweringPass {
                 }
                 inst.Remove();
             }
-            else if (inst is PhiInst phi && phi.ResultType is VectorType vtype) {
-                _sourceTypes[phi] = vtype;
-                phi.SetResultType(GetRealType(vtype));
+            else if (inst.ResultType is VectorType vtype) {
+                if (inst is PhiInst phi) {
+                    _sourceTypes[inst] = vtype;
+                    phi.SetResultType(GetRealType(vtype));
+                }
+                else if (inst is SelectInst) {
+                    _builder.SetPosition(inst, InsertionDir.After);
+                    
+                    var loweredPack = EmitIntrinsic(vtype, "ConditionalSelect", inst.Operands.ToArray());
+                    _sourceTypes[loweredPack] = vtype;
+                    inst.ReplaceWith(loweredPack);
+                }
+                else {
+                    throw new NotSupportedException();
+                }
             }
         }
 
