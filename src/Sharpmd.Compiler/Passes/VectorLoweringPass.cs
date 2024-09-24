@@ -56,10 +56,13 @@ public class VectorLoweringPass : IMethodPass {
                     _sourceTypes[inst] = vtype;
                     phi.SetResultType(GetRealType(vtype));
                 }
-                else if (inst is SelectInst) {
+                else if (inst is SelectInst csel) {
                     _builder.SetPosition(inst, InsertionDir.After);
                     
-                    var loweredPack = EmitIntrinsic(vtype, "ConditionalSelect", inst.Operands.ToArray());
+                    var cond = CoerceOperand(vtype, csel.Cond);
+                    var ifTrue = CoerceOperand(vtype, csel.IfTrue);
+                    var ifFalse = CoerceOperand(vtype, csel.IfFalse);
+                    var loweredPack = EmitIntrinsic(vtype, "ConditionalSelect", [cond, ifTrue, ifFalse]);
                     _sourceTypes[loweredPack] = vtype;
                     inst.ReplaceWith(loweredPack);
                 }

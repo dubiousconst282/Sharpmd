@@ -79,8 +79,8 @@ public static unsafe class SimdOps {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void CheckThrowInBoundsMask(ulong mask) {
-        if (mask != 0) {
+    public static void ConditionalThrow_IndexOutOfRange(bool cond) {
+        if (cond) {
             ThrowHelper();
         }
         static void ThrowHelper() => throw new IndexOutOfRangeException();

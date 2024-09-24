@@ -59,6 +59,17 @@ public class VectorIntrinsic : IntrinsicInst {
         public TypeDesc ElemType => ((PointerType)type.ElemType).ElemType;
 
     }
+    public class MemGather(VectorType type, Value address, Value? mask = null) : VectorIntrinsic(type, mask == null ? [address] : [address, mask]) {
+        public Value Address => Operands[0];
+        public Value? Mask => Operands.Length >= 2 ? Operands[1] : null;
+        public TypeDesc ElemType => ((PointerType)type.ElemType).ElemType;
+    }
+    public class MemScatter(VectorType type, Value address, Value value, Value? mask = null) : VectorIntrinsic(PrimType.Void, mask == null ? [address, value] : [address, value, mask]) {
+        public Value Address => Operands[0];
+        public Value DestValue => Operands[1];
+        public Value? Mask => Operands.Length >= 3 ? Operands[2] : null;
+        public TypeDesc ElemType => ((PointerType)type.ElemType).ElemType;
+    }
 
     public class GetLane(Value vector, int laneIdx) : VectorIntrinsic(((VectorType)vector.ResultType).ElemType, [vector, ConstInt.CreateI(laneIdx)]) {
         public int LaneIdx => (int)((ConstInt)Args[1]).Value;

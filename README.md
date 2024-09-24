@@ -6,11 +6,14 @@ WIP
 ## Tentative ideas / TODOs
 - Full scalarization support: everything works, apart from exception handling and async/yield stuff
 - Implement "Whole Function Vectorization", "Partial Linearization", etc in DistIL
-  - [ ] Mask generation and predication
-  - [ ] Control flow flattening
-  - [p] Widening and Vector Lowering
+  - [p] Predication, linearization, vector widening
+  - [p] Lowering of vector IR
   - [ ] Analyses for uniform/sequential/small stride opts
-  - [ ] SoA buffer intrinsic (`SoaBuffer<T>`)
+  - [ ] Automatic SoA transform of non-escaping structs within call-graph
+  - [ ] SoA buffer intrinsic (`SoaBuffer<T>`) for manual opts
+- Misc opts to amend auto-SoA
+  - [p] "Extrinsification" pass to undo/redirect CoreLib intrinsics
+  - [ ] Aggressive struct SROA
 - [ ] Roslyn analyser for perf hints and codegen inspection
 
 ### Complications and concerns

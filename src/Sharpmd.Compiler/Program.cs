@@ -1,5 +1,6 @@
 using DistIL;
 using DistIL.AsmIO;
+using DistIL.CodeGen.Cil;
 using DistIL.IR.Utils;
 using DistIL.Passes;
 
@@ -56,15 +57,14 @@ pm.Run(candidateMethods);
 
 var meth = candidateMethods.First(m => m.Name == "<<Main>$>b__0").Body;
 
-IRPrinter.ExportDot(meth, "logs/dump.dot", [new UniformValueAnalysis(meth, pm.Compilation.GetAnalysis<GlobalFunctionEffects>())]);
-
-new PredicationPass().Run(new MethodTransformContext(pm.Compilation, meth));
-
-IRPrinter.ExportDot(meth, "logs/dump.dot", [new UniformValueAnalysis(meth, pm.Compilation.GetAnalysis<GlobalFunctionEffects>())]);
+IRPrinter.ExportForest(meth, "logs/dump.txt");
+//IRPrinter.ExportDot(meth, "logs/dump.dot", [new UniformValueAnalysis(meth, pm.Compilation.GetAnalysis<GlobalFunctionEffects>())]);
 
 var widenPass=new VectorWideningPass(pm.Compilation, 4);
-var vectorMeth = widenPass.ProcessCallGraph(meth);
+widenPass.AddEntryPoint(meth);
+widenPass.Process();
 
+var vectorMeth = widenPass.GetVectorizedMethod(meth);
 
 new DeadCodeElim().Run(new MethodTransformContext(pm.Compilation, vectorMeth));
 IRPrinter.ExportPlain(vectorMeth, "logs/dump_A.txt");
