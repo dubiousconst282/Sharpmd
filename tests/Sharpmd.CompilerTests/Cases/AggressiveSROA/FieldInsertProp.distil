@@ -46,3 +46,34 @@ BB_01:
 // CHECK-NOT: getfld
 // CHECK: ret
 }
+
+static Self::Bug1_InvalidCacheAssign(#a: Vector3, #b: Vector3) -> float {
+BB_01:
+  r86 = getfld Vector3::X, #a -> float
+  r90 = getfld Vector3::Y, #a -> float
+  r94 = getfld Vector3::Z, #a -> float
+  r99 = getfld Vector3::X, #b -> float
+  r100 = fsub r86, r99 -> float
+  r101 = setfld Vector3::X, undef(Vector3), 1.0f -> Vector3
+  r103 = getfld Vector3::Y, #b -> float
+  r104 = fsub r90, r103 -> float
+  r105 = setfld Vector3::Y, r101, 2.0f -> Vector3
+  r107 = getfld Vector3::Z, #b -> float
+  r108 = fsub r94, r107 -> float
+  r109 = setfld Vector3::Z, r105, 3.0f -> Vector3
+  r159 = getfld Vector3::X, r109 -> float
+  r160 = getfld Vector3::X, r109 -> float
+  r161 = getfld Vector3::Y, r109 -> float
+  r162 = getfld Vector3::Y, r109 -> float
+  r163 = getfld Vector3::Z, r109 -> float
+  r164 = getfld Vector3::Z, r109 -> float
+  r165 = fmul r163, r164 -> float
+  r166 = call MathF::FusedMultiplyAdd(float: r161, float: r162, float: r165) -> float
+  r153 = call MathF::FusedMultiplyAdd(float: r159, float: r160, float: r166) -> float
+  ret r153
+// CHECK: Bug1_InvalidCacheAssign
+// CHECK: fmul 3.0f, 3.0f
+// CHECK-NEXT: MathF::FusedMultiplyAdd(float: 2.0f, float: 2.0f,
+// CHECK-NEXT: MathF::FusedMultiplyAdd(float: 1.0f, float: 1.0f,
+// CHECK: ret
+}

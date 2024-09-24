@@ -1,7 +1,5 @@
 using DistIL;
-using DistIL.Analysis;
 using DistIL.AsmIO;
-using DistIL.CodeGen.Cil;
 using DistIL.IR.Utils;
 using DistIL.Passes;
 
@@ -14,7 +12,7 @@ var module = resolver.Load(args[0]);
 
 var pm = new PassManager() {
     Compilation = new Compilation(module, new ConsoleLogger(), new CompilationSettings()),
-    Inspectors = { new PassTimingInspector() }
+    Inspectors = { new PassTimingInspector(), new PassDiffCollector("logs/pass_diff.json", null) }
 };
 
 pm.AddPasses()
@@ -29,7 +27,10 @@ pm.AddPasses(applyIndependently: true) // this is so that e.g. all callees are i
     .Apply<InlineMethods>();
 
 pm.AddPasses()
+    .Apply<SimplifyCFG>()
+    .Apply<ExtrinsifierPass>()
     .Apply<ScalarReplacement>()
+    .Apply<AggressiveSROA>()
     .IfChanged(c => c.Apply<SsaPromotion>()
                      .Apply<InlineMethods>()) // SROA+SSA uncovers new devirtualization oportunities
     .RepeatUntilFixedPoint(maxIters: 3);
@@ -47,7 +48,7 @@ pm.AddPasses()
 
 var candidateMethods = PassManager.GetCandidateMethodsFromIL(module, filter: (caller, method) => {
     if (method.Module != module) return false;
-
+    
     return true;
 });
 

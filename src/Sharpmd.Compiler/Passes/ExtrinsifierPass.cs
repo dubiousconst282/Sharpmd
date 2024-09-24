@@ -24,6 +24,8 @@ public class ExtrinsifierPass : IMethodPass {
         }
     }
     
+    static IMethodPass IMethodPass.Create<TSelf>(Compilation comp) => new ExtrinsifierPass(comp);
+
     public MethodPassResult Run(MethodTransformContext ctx) {
         var builder = new IRBuilder(ctx.Method.EntryBlock, InsertionDir.After);
         bool changed = false;
@@ -44,7 +46,7 @@ public class ExtrinsifierPass : IMethodPass {
             }
         }
 
-        return changed ? MethodInvalidations.None : MethodInvalidations.DataFlow;
+        return changed ? MethodInvalidations.DataFlow : MethodInvalidations.None;
     }
 
     /// <summary> Attempts to extrinsify the given call.</summary>
@@ -133,7 +135,7 @@ public class ExtrinsifierPass : IMethodPass {
         return null;
 
         Value GetComp(Value value, FieldDesc field) 
-            => value.ResultType.Kind != TypeKind.Struct ? value : builder.CreateFieldLoad(field, value);
+            => IsSNVector(value.ResultType) ? builder.CreateFieldLoad(field, value) : value;
     }
     
     private Value? Create_SNVector(IRBuilder builder, TypeDef type, ReadOnlySpan<Value> args) {
@@ -152,13 +154,13 @@ public class ExtrinsifierPass : IMethodPass {
         int numComp = type.Fields.Count;
         
         for (int i = 0, j = 0; j < numComp; i++) {
-            var vtype = args[Math.Min(i, args.Length - 1)].ResultType;
+            var arg = args[Math.Min(i, args.Length - 1)];
 
-            if (vtype.IsFloat()) {
-                result = builder.CreateFieldInsert(type.Fields[j++], result, args[i]);
+            if (arg.ResultType.IsFloat()) {
+                result = builder.CreateFieldInsert(type.Fields[j++], result, arg);
             } else {
-                foreach (var field in vtype.Fields) {
-                    var subcomp = builder.CreateFieldLoad(field, args[i]);
+                foreach (var field in arg.ResultType.Fields) {
+                    var subcomp = builder.CreateFieldLoad(field, arg);
                     result = builder.CreateFieldInsert(type.Fields[j++], result, subcomp);
                 }
             }

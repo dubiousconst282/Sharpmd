@@ -14,7 +14,7 @@ public class AggressiveSROA : IMethodPass {
         changed |= DestructSlots(ctx);
         changed |= PropagateFieldInserts(ctx.Method);
 
-        return changed ? MethodInvalidations.DataFlow : MethodInvalidations.Everything;
+        return changed ? MethodInvalidations.DataFlow : MethodInvalidations.None;
     }
 
     // Split local slots of struct types.
@@ -55,8 +55,6 @@ public class AggressiveSROA : IMethodPass {
 
     // Checks if it is cheap to inline the given method, and if doing so avoids the other given value from escaping.
     // This currently only checks the one method, and does not consider recursive calls.
-    //
-    // Trivia: this is possibly the longest/wordest identifier name I have ever written. Brainrot may be starting to affect me.
     private bool CanInlineMethodToMakeValueNonEscaping(MethodTransformContext ctx, MethodDesc methodDesc, ReadOnlySpan<Value> args, Value valueThatMustNotEscape) {
         if (methodDesc is not MethodDefOrSpec { Definition: var method }) return false;
 
@@ -75,7 +73,7 @@ public class AggressiveSROA : IMethodPass {
         }
 
         for (int i = 0; i < args.Length; i++) {
-            if (args[i] == valueThatMustNotEscape && IsEscaping(body.Args[i], isCtor: method.IsInstance && i == 0)) {
+            if (args[i] == valueThatMustNotEscape && IsEscaping(body.Args[i], isCtor: method.Name == ".ctor" && i == 0)) {
                 return false;
             }
         }
@@ -124,18 +122,13 @@ public class AggressiveSROA : IMethodPass {
                 return null;
             }
 
-            // Traverse the entire insert chain to initialize cache
-            var targetInsr = default(FieldInsertInst);
-
             while (obj is FieldInsertInst insr) {
-                if (field == insr.Field && targetInsr == null) {
-                    targetInsr = insr;
+                if (field == insr.Field) {
+                    return insr.NewValue;
                 }
-                cache[(obj, field)] = insr.NewValue;
+                // TODO: cache intermediate links so we only have to traverse chain once (why not trivial?)
+                // cache[(insr, insr.Field)] = insr.NewValue;
                 obj = insr.Obj;
-            }
-            if (targetInsr != null) {
-                return targetInsr.NewValue;
             }
             // TODO: consider traversing/replacing phis
             return null;
